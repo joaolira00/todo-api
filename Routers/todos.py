@@ -2,7 +2,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from Models.todos_model import Todos
 from Database.database import SessionLocal
-from scalar_fastapi import get_scalar_api_reference
 from sqlalchemy.orm import Session
 from starlette import status
 from Schemas.todo_schema import TodoSchema
