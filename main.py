@@ -1,13 +1,7 @@
-from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException, Path, Query
-from fastapi.responses import JSONResponse, Response
+from fastapi import FastAPI
 import Models.todos_model as todos_model
-from Models.todos_model import Todos
-from Database.database import engine, SessionLocal
+from Database.database import engine
 from scalar_fastapi import get_scalar_api_reference
-from sqlalchemy.orm import Session
-from starlette import status
-from Schemas.todo_schema import TodoSchema
 from Auth import auth
 from Routers import todos
 
