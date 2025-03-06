@@ -32,24 +32,20 @@ async def get_all_users(db: db_dependency):
         return users_model
 
 
-@router.post("/create-new-user", status_code=status.HTTP_201_CREATED, tags=["Auth"])
+@router.post("/create-new-user",
+             status_code=status.HTTP_201_CREATED, tags=["Auth"])
 async def create_user(db: db_dependency,
                       create_user_request: UserSchema):
     create_user_model = Users(
-        email = create_user_request.email,
-        username = create_user_request.username,
-        first_name = create_user_request.first_name,
-        last_name = create_user_request.last_name,
-        hashed_password = bcrypt_context.hash(create_user_request.hashed_password),
-        is_active = create_user_request.is_active,
-        role = create_user_request.role
+        email=create_user_request.email,
+        username=create_user_request.username,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        hashed_password=bcrypt_context.hash(create_user_request
+                                            .hashed_password),
+        is_active=create_user_request.is_active,
+        role=create_user_request.role
     )
 
     db.add(create_user_model)
     db.commit()
-
-
-
-
-
-
