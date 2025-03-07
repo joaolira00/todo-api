@@ -7,7 +7,10 @@ from starlette import status
 from Schemas.todo_schema import TodoSchema
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/todo",
+    tags=["todo"]
+)
 
 
 def get_db():
@@ -23,7 +26,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 
 @router.get("/get-all",
             responses={200: {"description": "Todo returned as requested"},
-                       404: {"description": "Todo not found"}}, tags=["Todos"])
+                       404: {"description": "Todo not found"}})
 async def get_all(db: db_dependency):
     todo_model = db.query(Todos).all()
     if todo_model is not None:
@@ -34,7 +37,7 @@ async def get_all(db: db_dependency):
 
 @router.get("/get-todo-by/{todo_id}",
             responses={200: {"description": "Todo returned as requested"},
-                       404: {"description": "Todo not found"}}, tags=["Todos"])
+                       404: {"description": "Todo not found"}})
 async def get_todo_by_id(db: db_dependency, todo_id: int = Path(gt=0)):
     todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
     if todo_model is not None:
@@ -45,7 +48,7 @@ async def get_todo_by_id(db: db_dependency, todo_id: int = Path(gt=0)):
 
 
 @router.post("/add-new-todo",
-             status_code=status.HTTP_201_CREATED, tags=["Todos"])
+             status_code=status.HTTP_201_CREATED)
 async def add_new_todo(db: db_dependency, todo_request: TodoSchema):
     todo_model = Todos(**todo_request.model_dump())
 
@@ -55,7 +58,7 @@ async def add_new_todo(db: db_dependency, todo_request: TodoSchema):
 
 
 @router.put("/update-todo/{todo_id}",
-            status_code=status.HTTP_204_NO_CONTENT, tags=["Todos"])
+            status_code=status.HTTP_204_NO_CONTENT)
 async def update_todo(db: db_dependency,
                       todo_request: TodoSchema, todo_id: int = Path(gt=0)):
     todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
@@ -75,7 +78,7 @@ async def update_todo(db: db_dependency,
 
 
 @router.delete("/delete_todo/{todo_id}",
-               status_code=status.HTTP_204_NO_CONTENT, tags=["Todos"])
+               status_code=status.HTTP_204_NO_CONTENT)
 async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
     todo_delete = db.query(Todos).filter(Todos.id == todo_id).first()
 
