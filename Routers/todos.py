@@ -5,6 +5,7 @@ from Database.database import SessionLocal
 from sqlalchemy.orm import Session
 from starlette import status
 from Schemas.todo_schema import TodoSchema
+from services.auth_service import get_current_user
 
 
 router = APIRouter(
@@ -22,13 +23,20 @@ def get_db():
 
 
 db_dependency = Annotated[Session, Depends(get_db)]
+user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 @router.get("/get-all",
             responses={200: {"description": "Todo returned as requested"},
                        404: {"description": "Todo not found"}})
-async def get_all(db: db_dependency):
-    todo_model = db.query(Todos).all()
+async def get_all(user: user_dependency, db: db_dependency):
+
+    if user is None:
+        raise HTTPException(status_code=401,
+                            detail="Authentication failed.")
+
+    todo_model = db.query(Todos).filter(Todos.
+                                        owner_id == user.get("id")).all()
     if todo_model is not None:
         return todo_model
     else:
@@ -38,19 +46,30 @@ async def get_all(db: db_dependency):
 @router.get("/get-todo-by/{todo_id}",
             responses={200: {"description": "Todo returned as requested"},
                        404: {"description": "Todo not found"}})
-async def get_todo_by_id(db: db_dependency, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+async def get_todo_by_id(user: user_dependency,
+                         db: db_dependency, todo_id: int = Path(gt=0)):
+
+    if user is None:
+        raise HTTPException(status_code=401,
+                            detail="Authentication failed.")
+
+    todo_model = db.query(Todos).filter(Todos.id == todo_id)\
+        .filter(Todos.owner_id == user.get("id")).first()
     if todo_model is not None:
         return todo_model
     else:
         raise HTTPException(status_code=404,
-                            detail="To Do with this ID does not exist.")
+                            detail="To Do not found.")
 
 
 @router.post("/add-new-todo",
              status_code=status.HTTP_201_CREATED)
-async def add_new_todo(db: db_dependency, todo_request: TodoSchema):
-    todo_model = Todos(**todo_request.model_dump())
+async def add_new_todo(user: user_dependency,
+                       db: db_dependency, todo_request: TodoSchema):
+    if user is None:
+        raise HTTPException(status_code=401,
+                            detail="Authentication failed.")
+    todo_model = Todos(**todo_request.model_dump(), owner_id=user.get('id'))
 
     db.add(todo_model)
     db.commit()
@@ -59,9 +78,14 @@ async def add_new_todo(db: db_dependency, todo_request: TodoSchema):
 
 @router.put("/update-todo/{todo_id}",
             status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo(db: db_dependency,
+async def update_todo(user:user_dependency, db: db_dependency,
                       todo_request: TodoSchema, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+    if user is None:
+        raise HTTPException(status_code=401,
+                            detail="Authentication failed.")
+
+    todo_model = db.query(Todos).filter(Todos.id == todo_id)\
+        .filter(Todos.owner_id == user.get("id")).first()
     if todo_model is None:
         raise HTTPException(status_code=404,
                             detail="To Do with this ID does not exist.")
@@ -79,8 +103,14 @@ async def update_todo(db: db_dependency,
 
 @router.delete("/delete_todo/{todo_id}",
                status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
-    todo_delete = db.query(Todos).filter(Todos.id == todo_id).first()
+async def delete_todo(user: user_dependency,
+                      db: db_dependency, todo_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401,
+                            detail="Authentication failed.")
+
+    todo_delete = db.query(Todos).filter(Todos.id == todo_id)\
+        .filter(Todos.owner_id == user.get("id")).first()
 
     if todo_id is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
