@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from Database.database import SessionLocal
 from sqlalchemy.orm import Session
 from starlette import status
@@ -52,6 +52,24 @@ async def recover_password(user_verification: UserVerification,
 
     user_model.hashed_password = bcrypt_context\
         .hash(user_verification.new_password)
+
+    db.add(user_model)
+    db.commit()
+
+
+@router.put("/update-phone-number/{user_new_phone}",
+            status_code=status.HTTP_204_NO_CONTENT)
+async def update_phone_number(user: user_dependency,
+                              db: db_dependency,
+                              user_new_phone: str = Path(min_length=11,
+                                                         max_length=11)):
+
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    user_model = db.query(Users).filter(Users.id == user.get('id')).first()
+
+    user_model.phone_number = user_new_phone
 
     db.add(user_model)
     db.commit()

@@ -16,3 +16,4 @@ jinja2
 flake8
 scalar-fastapi
 python-dotenv
+alembic
