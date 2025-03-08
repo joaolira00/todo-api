@@ -1,7 +1,7 @@
 """create phone number column os User table
 
 Revision ID: 9ecdb3cf014a
-Revises: 
+Revises:
 Create Date: 2025-03-08 14:32:52.949407
 
 """
