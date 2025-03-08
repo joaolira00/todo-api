@@ -9,3 +9,4 @@ class UserSchema(BaseModel):
     hashed_password: str = Field(min_length=6, max_length=30)
     is_active: bool = Field(default=True)
     role: str = Field(min_length=3, max_length=10)
+    phone_number: str = Field(min_length=11, max_length=11)
