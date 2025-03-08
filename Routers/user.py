@@ -1,10 +1,8 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Path
-from Models.todos_model import Todos
+from fastapi import APIRouter, Depends, HTTPException
 from Database.database import SessionLocal
 from sqlalchemy.orm import Session
 from starlette import status
-from Schemas.todo_schema import TodoSchema
 from services.auth_service import get_current_user
 from passlib.context import CryptContext
 from Models.user_models import Users
@@ -33,7 +31,7 @@ bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 async def get_logged_user(user: user_dependency, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication failed")
-    
+
     user = db.query(Users).filter(Users.id == user.get("id")).first()
 
     return user
@@ -44,14 +42,16 @@ async def recover_password(user_verification: UserVerification,
                            user: user_dependency, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication failed")
-    
+
     user_model = db.query(Users).filter(Users.id == user.get("id")).first()
-    
+
     if not bcrypt_context.verify(user_verification.password,
                                  user_model.hashed_password):
-        raise HTTPException(status_code=401, detail="Error on changing password.")
-    
-    user_model.hashed_password = bcrypt_context.hash(user_verification.new_password)
+        raise HTTPException(status_code=401,
+                            detail="Error on changing password.")
+
+    user_model.hashed_password = bcrypt_context\
+        .hash(user_verification.new_password)
 
     db.add(user_model)
     db.commit()
