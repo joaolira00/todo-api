@@ -11,6 +11,7 @@ from services.auth_service import (
 )
 from datetime import timedelta
 from Models.token_model import Token
+from services.auth_service import get_current_user
 
 
 router = APIRouter(
@@ -28,6 +29,7 @@ def get_db():
 
 
 db_dependency = Annotated[Session, Depends(get_db)]
+user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 @router.get("/get-all-user", status_code=status.HTTP_200_OK)
@@ -67,6 +69,9 @@ async def login_for_access_token(form_data:
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Could not validate user.")
-    token = create_access_token(user.username, user.id, timedelta(minutes=30))
+    token = create_access_token(username=user.username,
+                                user_id=user.id,
+                                role=user.role,
+                                expires_delta=timedelta(minutes=30))
 
     return {"access_token": token, "token_type": "bearer"}
